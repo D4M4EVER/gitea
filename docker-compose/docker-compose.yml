@@ -7,9 +7,6 @@ services:
     container_name: nginx-proxy
     image: nginxproxy/nginx-proxy
     restart: unless-stopped
-    ports:
-      - 80:80
-      - 443:443
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/tmp/docker.sock:ro
@@ -17,6 +14,10 @@ services:
       - ${DOCKER_CONF_DIR}/nginx-proxy/vhost.d:/etc/nginx/vhost.d
       - ${DOCKER_CONF_DIR}/nginx-proxy/html:/usr/share/nginx/html
       - ${DOCKER_CONF_DIR}/nginx-proxy/conf.d:/etc/nginx/conf.d
+    ports:
+      - 80:80
+      - 443:443
+    network_mode: host
 
   nginx-proxy-acme:
     container_name: nginx-proxy-acme
@@ -49,6 +50,7 @@ services:
       - ${DOCKER_CONF_DIR}/portainer:/data
     ports:
       - 127.0.0.1:9000:9000
+    network_mode: host
 
   ddclient:
     container_name: ddclient
