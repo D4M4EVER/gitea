@@ -1,0 +1,62 @@
+---
+version: "3.6"
+
+services:
+
+  nginx-proxy:
+    container_name: nginx-proxy
+    image: nginxproxy/nginx-proxy
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ${DOCKER_CONF_DIR}/nginx-proxy/certs:/etc/nginx/certs
+      - ${DOCKER_CONF_DIR}/nginx-proxy/vhost.d:/etc/nginx/vhost.d
+      - ${DOCKER_CONF_DIR}/nginx-proxy/html:/usr/share/nginx/html
+      - ${DOCKER_CONF_DIR}/nginx-proxy/conf.d:/etc/nginx/conf.d
+
+  nginx-proxy-acme:
+    container_name: nginx-proxy-acme
+    image: nginxproxy/acme-companion
+    restart: unless-stopped
+    environment:
+      - DEFAULT_EMAIL=${USER_EMAIL}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ${DOCKER_CONF_DIR}/nginx-proxy/certs:/etc/nginx/certs
+      - ${DOCKER_CONF_DIR}/nginx-proxy/vhost.d:/etc/nginx/vhost.d
+      - ${DOCKER_CONF_DIR}/nginx-proxy/html:/usr/share/nginx/html
+      - ${DOCKER_CONF_DIR}/nginx-proxy-acme:/etc/acme.sh
+
+  portainer:
+    hostname: ${DOCKERHOSTNAME}
+    container_name: portainer
+    image: portainer/portainer-ce:latest
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - VIRTUAL_HOST=portainer.${USER_DOMAIN}
+      - VIRTUAL_PORT=9000
+      - LETSENCRYPT_HOST=portainer.${USER_DOMAIN}
+      - LETSENCRYPT_EMAIL=${USER_EMAIL}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_CONF_DIR}/portainer:/data
+    ports:
+      - 127.0.0.1:9000:9000
+
+  ddclient:
+    container_name: ddclient
+    image: ghcr.io/linuxserver/ddclient
+    restart: unless-stopped
+    environment:
+      - PGID=${PGID}
+      - PUID=${PUID}
+      - TZ=${TZ}
+    volumes:
+      - ${DOCKER_CONF_DIR}/ddclient:/config
