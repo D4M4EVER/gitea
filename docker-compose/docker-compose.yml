@@ -26,7 +26,7 @@ services:
       - DEFAULT_EMAIL=${USER_EMAIL}
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - ${DOCKER_CONF_DIR}/nginx-proxy/certs:/etc/nginx/certs
       - ${DOCKER_CONF_DIR}/nginx-proxy/vhost.d:/etc/nginx/vhost.d
       - ${DOCKER_CONF_DIR}/nginx-proxy/html:/usr/share/nginx/html
