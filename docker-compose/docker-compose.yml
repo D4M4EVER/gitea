@@ -23,6 +23,7 @@ services:
     image: nginxproxy/acme-companion
     restart: unless-stopped
     environment:
+      - NGINX_PROXY_CONTAINER=nginx-proxy
       - DEFAULT_EMAIL=${USER_EMAIL}
     volumes:
       - /etc/localtime:/etc/localtime:ro
@@ -34,7 +35,7 @@ services:
     volumes_from:
       - nginx-proxy
     labels:
-      - "com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy"
+      - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy
 
   portainer:
     hostname: ${DOCKERHOSTNAME}
