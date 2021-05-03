@@ -33,6 +33,8 @@ services:
       - ${DOCKER_CONF_DIR}/nginx-proxy-acme:/etc/acme.sh
     volumes_from:
       - nginx-proxy
+    labels:
+      - "com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy"
 
   portainer:
     hostname: ${DOCKERHOSTNAME}
