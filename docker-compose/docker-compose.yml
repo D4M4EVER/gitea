@@ -8,6 +8,7 @@ services:
     image: nginxproxy/nginx-proxy
     restart: unless-stopped
     volumes:
+      - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ${DOCKER_CONF_DIR}/nginx-proxy/certs:/etc/nginx/certs
@@ -26,6 +27,7 @@ services:
       - NGINX_PROXY_CONTAINER=nginx-proxy
       - DEFAULT_EMAIL=${USER_EMAIL}
     volumes:
+      - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ${DOCKER_CONF_DIR}/nginx-proxy/certs:/etc/nginx/certs
@@ -34,6 +36,17 @@ services:
       - ${DOCKER_CONF_DIR}/nginx-proxy-acme:/etc/acme.sh
     volumes_from:
       - nginx-proxy
+
+  ddclient:
+    container_name: ddclient
+    image: ghcr.io/linuxserver/ddclient
+    restart: unless-stopped
+    environment:
+      - PGID=${PGID}
+      - PUID=${PUID}
+      - TZ=${TZ}
+    volumes:
+      - ${DOCKER_CONF_DIR}/ddclient:/config
 
   portainer:
     hostname: ${DOCKERHOSTNAME}
@@ -47,19 +60,52 @@ services:
       - LETSENCRYPT_HOST=portainer.${USER_SUBDOMAIN}
       - LETSENCRYPT_EMAIL=${USER_EMAIL}
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock
       - ${DOCKER_CONF_DIR}/portainer:/data
     ports:
       - 127.0.0.1:9000:9000
 
-  ddclient:
-    container_name: ddclient
-    image: ghcr.io/linuxserver/ddclient
+  mariadb:
+    container_name: mariadb
+    image: ghcr.io/linuxserver/mariadb
     restart: unless-stopped
     environment:
       - PGID=${PGID}
       - PUID=${PUID}
       - TZ=${TZ}
+      - MYSQL_ROOT_PASSWORD=${ROOT_ACCESS_PASSWORD}
+      - MYSQL_DATABASE=${USER_DB_NAME}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${DATABASE_PASSWORD}
     volumes:
-      - ${DOCKER_CONF_DIR}/ddclient:/config
+      - ${DOCKER_CONF_DIR}/mariadb:/config
+    ports:
+      - 127.0.0.1:3306:3306
+
+  gitea:
+    container_name: gitea
+    image: gitea/gitea
+    restart: unless-stopped
+    environment:
+      - USER_UID=${PUID}
+      - USER_GID=${PGID}
+      - GITEA__database__DB_TYPE=mysql
+      - GITEA__database__HOST=mariadb:3306
+      - GITEA__database__NAME=${USER_DB_NAME}
+      - GITEA__database__USER=${MYSQL_USER}
+      - GITEA__database__PASSWD=${DATABASE_PASSWORD}
+      - VIRTUAL_HOST=gitea.${USER_DOMAIN}
+      - VIRTUAL_PORT=3000
+      - LETSENCRYPT_HOST=gitea.${USER_DOMAIN}
+      - LETSENCRYPT_EMAIL=${USER_EMAIL}
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ${DOCKER_CONF_DIR}/gitea:/data
+     ports:
+       - 127.0.0.1:3000:3000
+       - 222:22
+     depends_on:
+       - mariadb
