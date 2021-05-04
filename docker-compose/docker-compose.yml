@@ -42,9 +42,9 @@ services:
     restart: unless-stopped
     environment:
       - TZ=${TZ}
-      - VIRTUAL_HOST=portainer.${USER_DOMAIN}
+      - VIRTUAL_HOST=portainer.${USER_SUBDOMAIN}
       - VIRTUAL_PORT=9000
-      - LETSENCRYPT_HOST=portainer.${USER_DOMAIN}
+      - LETSENCRYPT_HOST=portainer.${USER_SUBDOMAIN}
       - LETSENCRYPT_EMAIL=${USER_EMAIL}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
